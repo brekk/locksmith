@@ -1,0 +1,7 @@
+import IO from "IO"
+
+main = () => {
+  pipe(
+    IO.pTrace("Main file for:"),
+  )("locksmith")
+}
