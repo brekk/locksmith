@@ -9,25 +9,30 @@
     {
       "minVersion": "3.0.0",
       "url": "https://github.com/brekk/shroud/archive/refs/tags/v3.0.0.zip",
+      "name": "shroud",
       "description": "process wrapping for executables"
     },
     {
       "minVersion": "0.1.5",
       "url": "https://github.com/brekk/ensign/archive/refs/tags/v0.1.5.zip",
+      "name": "ensign",
       "description": "command line flag processing"
     },
     {
       "minVersion": "0.0.7",
+      "name": "study",
       "url": "https://github.com/brekk/study/archive/refs/tags/v0.0.7.zip",
       "description": "table-driven testing"
     },
     {
       "minVersion": "0.3.1",
+      "name": "party-bus",
       "url": "https://github.com/brekk/party-bus/archive/refs/tags/v0.3.1.zip",
       "description": "logging for madlib"
     },
     {
       "minVersion": "0.3.0",
+      "name": "mad-at-json",
       "url": "https://github.com/brekk/mad-at-json/archive/refs/tags/v0.3.0.zip",
       "description": "core madlib file parsing"
     }
