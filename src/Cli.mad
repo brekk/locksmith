@@ -14,6 +14,7 @@ import Declaration from "ensign/Declared"
 import Declared from "ensign/Declared/Flags"
 import EPrint from "ensign/Declared/Print"
 import Flags from "ensign/Flags"
+import Constants from "mad-at-json/Constants"
 import MadlibJson from "mad-at-json/MadlibDotJson"
 import Version from "mad-at-json/Version"
 import VersionLock from "mad-at-json/VersionDotLock"
@@ -153,6 +154,10 @@ serialize = ({ madlibDotJson, versionDotLock, cwd }) => (filePair) => where(file
       map(Fn.always(filePair)),
     )(madlibDotJson)
 }
+projectBaseUrl = pipe(
+  .sanitizedUrl,
+  mappend(Constants.TEMPORARY_MODULES_PATH),
+)
 // runLocksmith :: LocksmithState -> Wish String String
 runLocksmith = (conf) => do {
   { madlibDotJson, versionDotLock, cwd, setVersion, dryRunOnly, automatic: beHelpful } = conf
@@ -180,7 +185,7 @@ runLocksmith = (conf) => do {
         : Wish.bad,
     ),
   )(versionDotLock)
-  buildHash <- hashDir(cwd)
+  buildHash <- hashDir(relative("."))
   Log.env.config("smetversion", setVersion)
   version :: Maybe Version
   version = pipe(
