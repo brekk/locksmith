@@ -1,7 +1,16 @@
 import IO from "IO"
+import Wish from "Wish"
+
+import MadJson from "mad-at-json"
+
+
 
 main = () => {
+  raw = ["a"]
+  IO.pTrace("##", raw ++ ["x"])
   pipe(
-    IO.pTrace("Main file for:"),
-  )("locksmith")
+    MadJson.load,
+    map(IO.pTrace("RAW")),
+    Wish.fulfill((e) => { IO.pTrace("BAD", e) }, (x) => { IO.pTrace("GOOD", x) }),
+  )("madlib.json")
 }

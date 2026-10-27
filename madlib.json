@@ -1,38 +1,35 @@
 {
+  "name": "locksmith",
+  "version": "0.0.1",
+  "main": "src/Locksmith.mad",
+  "importAliases": {
+    ".": "./src"
+  },
   "dependencies": [
     {
-      "description": "process wrapping for executables",
       "minVersion": "3.0.0",
-      "name": "process wrapping for executables",
-      "url": "https://github.com/brekk/shroud/archive/refs/tags/v3.0.0.zip"
+      "url": "https://github.com/brekk/shroud/archive/refs/tags/v3.0.0.zip",
+      "description": "process wrapping for executables"
     },
     {
-      "description": "command line flag processing",
       "minVersion": "0.1.5",
-      "name": "command line flag processing",
-      "url": "https://github.com/brekk/ensign/archive/refs/tags/v0.1.5.zip"
+      "url": "https://github.com/brekk/ensign/archive/refs/tags/v0.1.5.zip",
+      "description": "command line flag processing"
     },
     {
-      "description": "table-driven testing",
       "minVersion": "0.0.7",
-      "name": "table-driven testing",
-      "url": "https://github.com/brekk/study/archive/refs/tags/v0.0.7.zip"
+      "url": "https://github.com/brekk/study/archive/refs/tags/v0.0.7.zip",
+      "description": "table-driven testing"
     },
     {
-      "description": "logging for madlib",
       "minVersion": "0.3.1",
-      "name": "logging for madlib",
-      "url": "https://github.com/brekk/party-bus/archive/refs/tags/v0.3.1.zip"
+      "url": "https://github.com/brekk/party-bus/archive/refs/tags/v0.3.1.zip",
+      "description": "logging for madlib"
     },
     {
-      "description": "core madlib file parsing",
       "minVersion": "0.3.0",
-      "name": "core madlib file parsing",
-      "url": "https://github.com/brekk/mad-at-json/archive/refs/tags/v0.3.0.zip"
+      "url": "https://github.com/brekk/mad-at-json/archive/refs/tags/v0.3.0.zip",
+      "description": "core madlib file parsing"
     }
-  ],
-  "importAliases": { ".": "./src" },
-  "main": "src/Locksmith.mad",
-  "name": "locksmith",
-  "version": "0.0.1"
+  ]
 }

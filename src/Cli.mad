@@ -2,6 +2,7 @@ import Either from "Either"
 import File from "File"
 import Path from "FilePath"
 import Fn from "Function"
+import IO from "IO"
 import Json from "Json"
 import List from "List"
 import Maybe from "Maybe"
@@ -34,8 +35,14 @@ export FLAGS = [
   Declared.flagString("madlib", ["m"], "Set the madlib.json path"),
   Declared.flagString("version-lock", ["L"], "Set the version.lock path"),
   Declared.flagBoolean("dry-run", ["D"], "Skip doing anything, just show what would happen"),
+  Declared.flagBoolean(
+    "auto",
+    ["automatic", "A"],
+    "Automatic mode. Tool will be more helpful / try to succeed",
+  ),
 ]
 alias LocksmithState = {
+  automatic :: Boolean,
   cwd :: String,
   dryRunOnly :: Boolean,
   madlibDotJson :: String,
@@ -53,6 +60,7 @@ export DEFAULT_STATE = {
   showHelp: false,
   setVersion: Maybe.Nothing,
   dryRunOnly: false,
+  automatic: true,
 }
 processFlagState :: LocksmithState
   -> (LocksmithState -> Flags.Flag -> #[Boolean, LocksmithState])
@@ -103,6 +111,8 @@ captureTheFlag = (state, flag) => where(flag) {
       #[false, { ...state, useColor: v }]
     } else if (k == "dry-run") {
       #[false, { ...state, dryRunOnly: v }]
+    } else if (k == "auto") {
+      #[false, { ...state, automatic: v }]
     } else {
       #[false, state]
     }
@@ -145,7 +155,7 @@ serialize = ({ madlibDotJson, versionDotLock, cwd }) => (filePair) => where(file
 }
 // runLocksmith :: LocksmithState -> Wish String String
 runLocksmith = (conf) => do {
-  { madlibDotJson, versionDotLock, cwd, setVersion, dryRunOnly } = conf
+  { madlibDotJson, versionDotLock, cwd, setVersion, dryRunOnly, automatic: beHelpful } = conf
   relative = rel(cwd)
   loadRelativeVersionLock = pipe(
     relative,
@@ -161,11 +171,13 @@ runLocksmith = (conf) => do {
     loadRelativeVersionLock,
     map(Log.env.config("version.lock")),
     Wish.chainRej(
-      (_) => pipe(
-        Shroud.cover("madlib"),
-        Wish.mapRej(Fn.always("BARF?")),
-        chain((_) => loadRelativeVersionLock(versionDotLock)),
-      )(["package"]),
+      !dryRunOnly && beHelpful
+        ? (_) => pipe(
+          Shroud.cover("madlib"),
+          Wish.mapRej(Fn.always("BARF?")),
+          chain((_) => loadRelativeVersionLock(versionDotLock)),
+        )(["package"])
+        : Wish.bad,
     ),
   )(versionDotLock)
   buildHash <- hashDir(cwd)
@@ -175,31 +187,30 @@ runLocksmith = (conf) => do {
     scan,
     Log.env.config("VERSION!"),
   )(setVersion ?? "")
+  return where(version) {
+    Just(_v) =>
+      do {
+        mad2json = { ...madlibJson, version: _v }
+        ver2json = { ...versionJson, buildHash }
+        return if (dryRunOnly) {
+          Wish.good(
+            "Dry run mode! No changes. I would have updated the version of `madlib.json` to "
+              ++ show(_v)
+              ++ " and change the build hash of `version.lock` from "
+              ++ IO.red(versionJson.buildHash)
+              ++ " to "
+              ++ IO.green(buildHash),
+          )
+        } else {
+          pipe(
+            serialize(conf),
+            map(Fn.always("Updated madlib.json and version.lock")),
+          )(#[mad2json, ver2json])
+        }
+      }
 
-  return if (dryRunOnly) do {
-    return Wish.good(MadlibJson.write(madlibJson))
-    // Log.env.locksmith("!!!", MadlibJson.serialize(madlibJson))
-    // return Wish.good("Nope, can't trick me into doing stuff!")
-  } else {
-    where(version) {
-      Just(_v) =>
-        pipe(
-          map(Log.env.locksmith("warp engine")),
-          map(Fn.always("Updated madlib.json and version.lock")),
-          // Wish.mapRej(Fn.always("Unable to do shit")),
-        )(
-          serialize(
-            conf,
-            #[
-              { ...madlibJson, version: Maybe.fromMaybe(Version.Version(0, 0, 0), version) },
-              { ...versionJson, buildHash },
-            ],
-          ),
-        )
-
-      _ =>
-        Wish.bad("Version required!")
-    }
+    _ =>
+      Wish.bad("Version required!")
   }
 }
 main = (args) => {
@@ -223,13 +234,6 @@ main = (args) => {
       ),
     ),
     map(Log.env.locksmith("hooray")),
-    Wish.fulfill(
-      (bad) => {
-        Log.env.failure("out", bad)
-      },
-      (good) => {
-        Log.env.success("yes", good)
-      },
-    ),
+    Wish.fulfill((bad) => { IO.pTrace("no", bad) }, (good) => { IO.put(good) }),
   )(args)
 }
