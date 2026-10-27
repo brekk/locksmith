@@ -190,16 +190,27 @@ runLocksmith = (conf) => do {
   return where(version) {
     Just(_v) =>
       do {
+        versionHash = Version.hash(_v)
         mad2json = { ...madlibJson, version: _v }
-        ver2json = { ...versionJson, buildHash }
+        ver2json = { ...versionJson, buildHash, versionHash }
         return if (dryRunOnly) {
           Wish.good(
-            "Dry run mode! No changes. I would have updated the version of `madlib.json` to "
-              ++ show(_v)
-              ++ " and change the build hash of `version.lock` from "
+            "Dry run mode! No changes. Proposed changes:\n"
+              ++ "\n  madlib.json"
+              ++ "\n     - version: "
+              ++ IO.red(Version.showVersion(madlibJson.version))
+              ++ " ➡ "
+              ++ IO.green(Version.showVersion(_v))
+              ++ "\n  version.lock"
+              ++ "\n     - buildHash: "
               ++ IO.red(versionJson.buildHash)
-              ++ " to "
-              ++ IO.green(buildHash),
+              ++ " ➡ "
+              ++ IO.green(buildHash)
+              ++ "\n     - versionHash: "
+              ++ IO.red(versionJson.versionHash)
+              ++ " ➡ "
+              ++ IO.green(versionHash)
+              ++ "\n",
           )
         } else {
           pipe(
