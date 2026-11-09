@@ -149,15 +149,20 @@ serialize = ({ madlibDotJson, versionDotLock, cwd }) => (filePair) => where(file
           rel(cwd),
           File.write($, VersionLock.write(versionLock)),
           Wish.mapRej(Fn.always("Unable to write version.lock")),
+          chain((_) => hashDir(".")),
+          chain(
+            (hash) => pipe(
+              rel(cwd),
+              Log.tapped.locksmith("processing?", (x) => #[x, versionLock, hash]),
+              File.write($, VersionLock.write({ ...versionLock, versionHash: hash })),
+              Wish.mapRej(Fn.always("Unable to write version.lock")),
+            )(versionDotLock),
+          ),
         )(versionDotLock),
       ),
       map(Fn.always(filePair)),
     )(madlibDotJson)
 }
-projectBaseUrl = pipe(
-  .sanitizedUrl,
-  mappend(Constants.TEMPORARY_MODULES_PATH),
-)
 // runLocksmith :: LocksmithState -> Wish String String
 runLocksmith = (conf) => do {
   { madlibDotJson, versionDotLock, cwd, setVersion, dryRunOnly, automatic: beHelpful } = conf
@@ -185,7 +190,6 @@ runLocksmith = (conf) => do {
         : Wish.bad,
     ),
   )(versionDotLock)
-  buildHash <- hashDir(relative("."))
   Log.env.config("smetversion", setVersion)
   version :: Maybe Version
   version = pipe(
@@ -197,7 +201,7 @@ runLocksmith = (conf) => do {
       do {
         versionHash = Version.hash(_v)
         mad2json = { ...madlibJson, version: _v }
-        ver2json = { ...versionJson, buildHash, versionHash }
+        ver2json = { ...versionJson, versionHash }
         return if (dryRunOnly) {
           Wish.good(
             "Dry run mode! No changes. Proposed changes:\n"
@@ -209,8 +213,7 @@ runLocksmith = (conf) => do {
               ++ "\n  version.lock"
               ++ "\n     - buildHash: "
               ++ IO.red(versionJson.buildHash)
-              ++ " ➡ "
-              ++ IO.green(buildHash)
+              ++ " ➡ ???"
               ++ "\n     - versionHash: "
               ++ IO.red(versionJson.versionHash)
               ++ " ➡ "
